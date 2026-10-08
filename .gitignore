@@ -1,0 +1,21 @@
+# Dependencies
+node_modules/
+
+# Next.js and TypeScript build output
+.next/
+out/
+*.tsbuildinfo
+
+# Local environment and logs
+.env
+.env.local
+.env.*.local
+*.log
+
+# Locally uploaded vendor media (use object storage in production)
+public/uploads/
+
+# OS and editor files
+.DS_Store
+.idea/
+.vscode/
