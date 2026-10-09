@@ -1,10 +1,21 @@
 "use client";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { useStore } from "@/lib/store";
 import { CATEGORIES, type DemoProduct } from "@/lib/demo-data";
 import { CURRENCIES, LANGUAGES } from "@/lib/format";
+
+type MobileIconName = "home" | "search" | "cart" | "account" | "more";
+
+function MobileNavIcon({ name }: { name: MobileIconName }) {
+  const common = { width: 22, height: 22, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 2, strokeLinecap: "round" as const, strokeLinejoin: "round" as const, "aria-hidden": true };
+  if (name === "home") return <svg {...common}><path d="m3 10 9-7 9 7" /><path d="M5 9v11h14V9" /><path d="M9 20v-7h6v7" /></svg>;
+  if (name === "search") return <svg {...common}><circle cx="11" cy="11" r="7" /><path d="m20 20-4-4" /></svg>;
+  if (name === "cart") return <svg {...common}><path d="M3 4h2l2.2 10.2a2 2 0 0 0 2 1.6h7.7a2 2 0 0 0 2-1.6L20 8H7" /><circle cx="10" cy="20" r="1" /><circle cx="17" cy="20" r="1" /></svg>;
+  if (name === "account") return <svg {...common}><circle cx="12" cy="8" r="4" /><path d="M4.5 21a7.5 7.5 0 0 1 15 0" /></svg>;
+  return <svg {...common}><circle cx="5" cy="12" r="1" fill="currentColor" stroke="none" /><circle cx="12" cy="12" r="1" fill="currentColor" stroke="none" /><circle cx="19" cy="12" r="1" fill="currentColor" stroke="none" /></svg>;
+}
 
 export default function Header() {
   const { cartCount, wishlist, user, logout, currency, setCurrency, lang, setLang, dark, setDark, setCartOpen } = useStore();
@@ -16,6 +27,7 @@ export default function Header() {
   const [locOpen, setLocOpen] = useState(false);
   const [mobileMenu, setMobileMenu] = useState(false);
   const router = useRouter();
+  const pathname = usePathname();
   const boxRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -226,11 +238,19 @@ export default function Header() {
         </div>
       )}
 
-      <nav className="md:hidden fixed bottom-0 inset-x-0 z-40 bg-white/95 dark:bg-stone-950/95 backdrop-blur border-t grid grid-cols-5 pt-2 pb-[max(.5rem,env(safe-area-inset-bottom))] text-[10px] font-bold" aria-label="Mobile navigation">
-        {[{ h: "/", i: "🏠", l: "Home" }, { h: "/search", i: "🔍", l: "Search" }, { h: "/cart", i: "🛒", l: "Cart" }, { h: accountHref, i: "👤", l: user ? "Account" : "Sign in" }].map((n) => (
-          <Link key={n.l} href={n.h} className="flex flex-col items-center gap-0.5 min-w-0"><span className="text-xl">{n.i}</span>{n.l}</Link>
+      <nav className="md:hidden fixed bottom-0 inset-x-0 z-40 bg-white/95 dark:bg-stone-950/95 backdrop-blur border-t grid grid-cols-5 pt-1.5 pb-[max(.5rem,env(safe-area-inset-bottom))] px-1 text-[10px] font-bold" aria-label="Mobile navigation">
+        {([
+          { h: "/", icon: "home", label: "Home", active: pathname === "/" },
+          { h: "/search", icon: "search", label: "Search", active: pathname === "/search" || pathname === "/products" },
+          { h: "/cart", icon: "cart", label: "Cart", active: pathname === "/cart" || pathname === "/checkout" },
+          { h: accountHref, icon: "account", label: user ? "Account" : "Sign in", active: pathname === accountHref },
+        ] as { h: string; icon: MobileIconName; label: string; active: boolean }[]).map((item) => (
+          <Link key={item.label} href={item.h} aria-current={item.active ? "page" : undefined} className={`flex min-h-12 min-w-0 flex-col items-center justify-center gap-0.5 rounded-xl px-1 transition-colors ${item.active ? "text-[var(--brand)]" : "text-slate-500 dark:text-stone-400"}`}>
+            <span className={`grid h-7 w-9 place-items-center rounded-xl ${item.active ? "bg-orange-50 dark:bg-orange-950/40" : ""}`}><MobileNavIcon name={item.icon} /></span>
+            <span className="truncate max-w-full">{item.label}</span>
+          </Link>
         ))}
-        <button type="button" onClick={() => { setMega(false); setMobileMenu((open) => !open); }} aria-expanded={mobileMenu} aria-controls="mobile-more-menu" className="flex flex-col items-center justify-center gap-0.5 min-w-0 min-h-12 touch-manipulation"><span className="text-xl leading-none">•••</span>More</button>
+        <button type="button" onClick={() => { setMega(false); setMobileMenu((open) => !open); }} aria-expanded={mobileMenu} aria-controls="mobile-more-menu" className={`flex min-h-12 min-w-0 touch-manipulation flex-col items-center justify-center gap-0.5 rounded-xl px-1 transition-colors ${mobileMenu ? "text-[var(--brand)]" : "text-slate-500 dark:text-stone-400"}`}><span className={`grid h-7 w-9 place-items-center rounded-xl ${mobileMenu ? "bg-orange-50 dark:bg-orange-950/40" : ""}`}><MobileNavIcon name="more" /></span><span>More</span></button>
       </nav>
     </>
   );
